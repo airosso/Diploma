@@ -4,6 +4,7 @@ import pickle
 
 import tqdm
 from PIL import Image
+from PIL.ImageDraw import ImageDraw
 
 
 def dataset_info(number):
@@ -55,6 +56,14 @@ def crop_image(image, square, out):
     file.crop((left, top, left + w, top + h)).save(out)
 
 
+def draw_rectangle_image(image, square, out):
+    file = Image.open(image).convert("RGB")
+    draw = ImageDraw(file)
+    left, top, w, h = square
+    draw.line([(left, top), (left + w, top), (left + w, top + h), (left, top + h), (left, top)], fill="red")
+    file.save(out, "JPEG")
+
+
 def process_datasets(numbers, folder):
     infos = list(map(dataset_info, numbers))
     if not os.path.exists(folder):
@@ -68,6 +77,7 @@ def process_datasets(numbers, folder):
         for image, square, category, key in tqdm.tqdm(zip(images, squares, categories, ids),
                                                       desc="Format dataset S%d" % number):
             crop_image(image, square, os.path.join(dataset_path, "%s_%s.tiff" % (category, key)))
+            draw_rectangle_image(image, square, image[:-5] + "_debug.jpg")
 
 
 if __name__ == '__main__':
